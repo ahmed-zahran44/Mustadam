@@ -8,6 +8,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — 2026-11-21 — Full Project Documentation Alignment
+- Synchronized all living documentation to reflect the real implemented codebase (Next.js `16.4.6`, 3-domain commercial isolation `ADR-010`, 6-tab `/admin` portal, 24 curated real-photo laptops & furniture catalog, 17 Vitest suites / 125 tests, and 6 Playwright suites / 42 scenarios):
+  - Replaced default Next.js boilerplate in [README.md](file:///d:/Mustadam%20Project/README.md) with full Mustadama setup, 3-domain URLs, pre-seeded demo credentials, scripts, and living docs index.
+  - Updated [PROJECT.md](file:///d:/Mustadam%20Project/PROJECT.md), [ARCHITECTURE.md](file:///d:/Mustadam%20Project/ARCHITECTURE.md), [AGENTS.md](file:///d:/Mustadam%20Project/AGENTS.md), [.agents/rules/mustadama-docs-sync.md](file:///d:/Mustadam%20Project/.agents/rules/mustadama-docs-sync.md), [.env.example](file:///d:/Mustadam%20Project/.env.example), [DEMO_GUIDE.md](file:///d:/Mustadam%20Project/DEMO_GUIDE.md), [PLAYWRIGHT_TEST_REPORT.md](file:///d:/Mustadam%20Project/PLAYWRIGHT_TEST_REPORT.md), and [TEST_READY.md](file:///d:/Mustadam%20Project/TEST_READY.md).
+
+### Added & Changed — 2026-11-21 — Three-Domain Commercial Portal Isolation (`partner.*` Subdomain & Pure Customer Website)
+- **Partner Operations Subdomain & Dedicated Auth Gate (`ADR-010`, [src/lib/auth/subdomain.ts](file:///d:/Mustadam%20Project/src/lib/auth/subdomain.ts), [src/proxy.ts](file:///d:/Mustadam%20Project/src/proxy.ts), [src/app/[locale]/(partner)/partner/login/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/(partner)/partner/login/page.tsx), [src/lib/auth/actions.ts](file:///d:/Mustadam%20Project/src/lib/auth/actions.ts)):**
+  - Isolated `/partner` onto its own `partner.*` subdomain (`partner.localhost:3000`, `partner.mustadama.eg`, or `NEXT_PUBLIC_PARTNER_HOST`) with a dedicated `/[locale]/partner/login` gate (`partnerLoginAction`) allowing only authorized Partner Operations roles and `Admin`.
+  - Blocked both `/partner` and `/admin` on the customer domain (`localhost:3000` / `mustadama.eg`).
+- **Pure Commercial Customer Website ([src/components/layout/site-header.tsx](file:///d:/Mustadam%20Project/src/components/layout/site-header.tsx), [src/components/layout/site-footer.tsx](file:///d:/Mustadam%20Project/src/components/layout/site-footer.tsx), [src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx), [src/app/[locale]/layout.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/layout.tsx), [src/app/[locale]/(auth)/login/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/(auth)/login/page.tsx)):**
+  - Removed `Partner Operations` from customer `SiteHeader` navbar (`Store`, `Seller Portal`, `Sign In`), customer `SiteFooter` (`Marketplace & Sourcing` + `Customer Account`), and landing page directory (replaced with **Corporate B2B Programs** card linking to `/register`).
+  - Scrubbed demo credential placeholders from the customer `/login` form.
+- **Cross-Subdomain Role Simulator Handoff ([src/app/api/auth/demo-switch/route.ts](file:///d:/Mustadam%20Project/src/app/api/auth/demo-switch/route.ts), [src/components/demo/graduation-demo-toolbar.tsx](file:///d:/Mustadam%20Project/src/components/demo/graduation-demo-toolbar.tsx)):**
+  - Added `/api/auth/demo-switch` so switching personas across `localhost:3000`, `partner.localhost:3000`, and `admin.localhost:3000` sets session cookies directly on the target subdomain origin.
+- **Localization & Tests ([messages/en.json](file:///d:/Mustadam%20Project/messages/en.json), [messages/ar.json](file:///d:/Mustadam%20Project/messages/ar.json), [tests/unit/admin-subdomain-gate.test.ts](file:///d:/Mustadam%20Project/tests/unit/admin-subdomain-gate.test.ts)):**
+  - Added bilingual `PartnerGate`, `Landing.portalCorporate*`, and `Footer.accountHeading` keys with 100% EN/AR parity and updated unit + E2E suites.
+
+### Added & Fixed — 2026-11-20 — Complete `/admin` Control Center, Customer Service Workspace & MIS Analytics
+- **RBAC & Subdomain Gate Alignment ([src/proxy.ts](file:///d:/Mustadam%20Project/src/proxy.ts), [src/lib/auth/actions.ts](file:///d:/Mustadam%20Project/src/lib/auth/actions.ts), [src/app/[locale]/(admin)/admin/login/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/(admin)/admin/login/page.tsx)):**
+  - Updated the admin subdomain authorization gate and `adminLoginAction` so both `Admin` and `Customer_Service` roles can authenticate and operate on `/admin`, while continuing to block `Customer`, `Courier`, and `Partner_*` roles.
+  - Wrapped `AdminLoginPage` form in `<Suspense>` for clean Next.js App Router rendering.
+- **Hardened & Complete Admin Server Actions ([src/lib/domain/admin-actions.ts](file:///d:/Mustadam%20Project/src/lib/domain/admin-actions.ts)):**
+  - Added strict server-side role guards (`requireAdminPortalRole`) and input validation across all administrative mutations.
+  - Extended `createOrUpdateCategoryAction` to support editing existing categories (`categoryId`) and deduplicating by case-insensitive category name.
+  - Added `expireCorporateQuoteAction`, `updateReturnTaskStatusAction`, `updateCustomerSegmentAction`, `reviewBulkyPreverificationAction`, and `runAdminAgingAndExpiryAction`.
+  - Fixed cross-user `notifications` RLS error when `Customer_Service` notifies buyers/sellers by routing verified server-dispatched staff notifications through `SimulatedNotificationAdapter(createAdminClient())`.
+- **Real-Time MIS Data Loader & Zero-Fake KPIs ([src/app/[locale]/(admin)/admin/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/(admin)/admin/page.tsx)):**
+  - Replaced hardcoded fallback numbers with real PostgreSQL calculations: Circular Revenue (Store + Recycling), Realized & Listed Profit Margins, Offer Decision Funnel (`accepted`/`rejected`/`auto_rejected`/`pending`), **Average Turnaround Time from Receipt to Sale (`FR-26`)**, 30–60–90+ Aging Tiers, Item Lifecycle Pipeline distribution, and Material-level Landfill Diversion & CO₂e impact.
+  - Added relational enrichment for B2B Quotes (buyer company/Tax ID + itemized units), Warranty Claims (buyer + serialized unit + active warranty end date), Registered Customer Directory, Campaign Dispatch History, Bulky Pre-Verification Requests (`FR-08`), Seller Return Authorizations (`return_tasks`), Serialized Inventory Economics, and the Immutable Lifecycle Audit Log (`item_status_history`).
+- **Modular Bilingual (EN LTR / AR RTL) Admin Portal UI ([src/components/admin/](file:///d:/Mustadam%20Project/src/components/admin/admin-portal-client.tsx)):**
+  - Decomposed `/admin` into 6 Operate-mode tabs (`admin-kpis-tab.tsx`, `admin-categories-tab.tsx`, `admin-campaigns-tab.tsx`, `admin-quotes-tab.tsx`, `admin-support-tab.tsx`, `admin-operations-tab.tsx`) plus shared types (`admin-types.ts`), defaulting `Customer_Service` directly to the Warranty Claims & Return Authorizations workspace.
+  - Added visual interactive Diagnostic Question Builder + live `FR-04` valuation preview synced with the JSON schema editor, interactive customer directory with inline segment switching, inline Aging & Offer Expiry Engine trigger, and searchable inventory & audit trail tables.
+- **Automated Verification ([tests/unit/admin-portal.test.ts](file:///d:/Mustadam%20Project/tests/unit/admin-portal.test.ts), [tests/e2e/06-admin-portal.spec.ts](file:///d:/Mustadam%20Project/tests/e2e/06-admin-portal.spec.ts)):**
+  - Added 5 unit tests covering all 6 Admin tabs, EN/AR parity, `Customer_Service` default workspace, and RBAC server-action enforcement, and expanded Playwright Suite 6 (`ADMIN-01`–`ADMIN-06`, 6/6 passing against live Cloud Supabase).
+
+### Added — 2026-11-18 — Certified Refurbished Furniture Catalog, Photos & Storefront Category Filter
+- **Furniture Product Assets & Database Inventory ([src/lib/catalog/laptop-media.ts](file:///d:/Mustadam%20Project/src/lib/catalog/laptop-media.ts), `public/products/furniture/`):**
+  - Added 8 certified refurbished office & studio furniture products (16 local studio photos across Herman Miller, Steelcase, Autonomous, IKEA, Haworth, West Elm, and Humanscale) into `public/products/furniture/<slug>/` and seeded them (`MST-FURN-001`–`008`, `category_id = '33333333-3333-3333-3333-333333333303'`) into Cloud Supabase `serialized_items` (`Listed_In_Store`).
+- **Storefront Category Filter & Landing Showcase ([src/components/store/storefront-client.tsx](file:///d:/Mustadam%20Project/src/components/store/storefront-client.tsx), [src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx), [src/components/landing/interactive-showcase.tsx](file:///d:/Mustadam%20Project/src/components/landing/interactive-showcase.tsx)):**
+  - Added Category filter pills (`All Products`, `Laptops & Electronics`, `Office & Studio Furniture`) in `/store`.
+  - Added the **Certified Refurbished Office & Studio Furniture** showcase section on the landing page and integrated furniture items into the moving Product Photo Showcase Reel and Interactive Studio & Trade-In Estimator.
+
+### Added — 2026-11-18 — Scroll-Driven 3D Folding Laptop Hero Background
+- **3D Scroll-Folding Laptop Backdrop ([src/components/landing/hero-folding-laptop.tsx](file:///d:/Mustadam%20Project/src/components/landing/hero-folding-laptop.tsx), [src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx)):**
+  - Added `HeroFoldingLaptopBackground` (`data-testid="hero-folding-laptop-bg"`) inside the Hero section using a large centered real photograph (`/products/laptops/dell-inspiron-16-plus-7610/2.jpg`) that physically folds its screen plane (`0%` → `80.5%`) down onto the keyboard base around the `80.5%` hinge axis as the user scrolls down.
+
+### Added — 2026-11-18 — E-Commerce Studio Backdrop & Interactive Bento Showcase (Back Market / Reebelo Inspiration)
+- **E-Commerce Studio Canvas & Architectural Grid ([src/app/globals.css](file:///d:/Mustadam%20Project/src/app/globals.css)):**
+  - Tuned light/dark studio base palette (`#f8faf9` warm stone / `#080b0a` carbon obsidian) and added `.bg-ecommerce-studio` radial spotlight washes and `.bg-ecommerce-grid` masked architectural perspective lines across the landing page and storefront.
+- **Interactive Animated E-Commerce Bento Showcase ([src/components/landing/interactive-showcase.tsx](file:///d:/Mustadam%20Project/src/components/landing/interactive-showcase.tsx), [src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx)):**
+  - Added a live auto-cycling Circular E-Commerce Telemetry Ticker, an Interactive Hardware Studio & Retail Savings Inspector (with model switcher, multi-angle photo toggle, and live `Save % vs. Brand New` breakdown), and an Instant Trade-In & Circular Value Estimator calculating payout ranges and avoided `CO₂e`.
+
+### Added — 2026-11-18 — Animated Product Photo Motion System (Impeccable Animate Pass)
+- **Product Photo Motion Keyframes ([src/app/globals.css](file:///d:/Mustadam%20Project/src/app/globals.css)):**
+  - Added `@keyframes product-levitate` (staggered 3D product photo float), `@keyframes hero-photo-primary` / `hero-photo-secondary` (automatic multi-angle crossfade & zoom on the Hero Flagship laptop), and `@keyframes product-marquee` (continuous infinite product showcase reel that pauses on hover), with full `prefers-reduced-motion: reduce` support.
+- **Landing Page & Storefront Product Photo Animation ([src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx), [src/components/store/storefront-client.tsx](file:///d:/Mustadam%20Project/src/components/store/storefront-client.tsx)):**
+  - Added dual-angle product photo crossfade (`images[0]` → `images[1]`) on hover across both Featured Laptop cards and Storefront catalog cards, staggered photo levitation, and a continuous scrolling Product Photo Showcase Reel on the landing page.
+
+### Changed & Fixed — 2026-11-18 — Next.js 16.4.6 Security Upgrade & Browser Extension Hydration Guard
+- **Next.js Security Upgrade ([package.json](file:///d:/Mustadam%20Project/package.json), [next.config.ts](file:///d:/Mustadam%20Project/next.config.ts)):**
+  - Upgraded `next` and `eslint-config-next` from `16.4.3` to `16.4.6` via `next upgrade --agent=security` and enabled `experimental.agentUpgrade: "security"` in `next.config.ts`.
+- **Browser Extension Hydration Mismatch Protection ([src/app/[locale]/layout.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/layout.tsx)):**
+  - Extended `THEME_INIT_SCRIPT` (`beforeInteractive`) with a pre-hydration DOM sanitizer and short-lived `MutationObserver` that removes `bis_skin_checked` and `bis_register` attributes injected by browser security extensions (Bitdefender) before React hydrates child `<div>` elements.
+
+### Changed — 2026-11-18 — Landing Page Blurred Atmospheric Backdrop, Motion System & Hero Badge Removal
+- **Hero Kicker Badge Removed ([src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx)):**
+  - Removed the top hero pill badge (`Egypt's Premier Circular Re-Commerce Platform`) so the display `<h1>` headline leads directly.
+- **Blurred Atmospheric Backdrop & Frosted Surfaces ([src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx)):**
+  - Added multi-layered radial emerald/teal ambient blurred orbs (`blur-3xl`) behind frosted glass sections (`backdrop-blur-2xl`, `backdrop-blur-xl`, `bg-white/80 dark:bg-neutral-900/80`).
+- **Impeccable Motion System ([src/app/globals.css](file:///d:/Mustadam%20Project/src/app/globals.css), [src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx)):**
+  - Added staggered hero entrance choreography (`cubic-bezier(0.16, 1, 0.3, 1)`), subtle ambient orb drift, flagship hardware card float, child-carried hover motion, and a `@media (prefers-reduced-motion: reduce)` path.
+
+### Changed — 2026-11-18 — Impeccable UI/UX Polish on Landing Page & Storefront
+- **Browser Surfaces & Typographic Discipline ([src/app/globals.css](file:///d:/Mustadam%20Project/src/app/globals.css)):**
+  - Added themed `::selection`, high-contrast `:focus-visible` outlines, `accent-color`, `text-wrap: balance` on headings, and `text-wrap: pretty` on body copy.
+- **Asymmetric Editorial Hero & Hardware Showcase ([src/app/[locale]/page.tsx](file:///d:/Mustadam%20Project/src/app/%5Blocale%5D/page.tsx)):**
+  - Upgraded the Hero section to a 12-column editorial split pairing tight display typography (`tracking-[-0.025em]`, `max-w-[62ch]`) with a live flagship hardware preview card, preserving logical RTL/LTR classes and `.ltr-data` tabular numerals.
+- **Storefront Operate-Mode Polish ([src/components/store/storefront-client.tsx](file:///d:/Mustadam%20Project/src/components/store/storefront-client.tsx)):**
+  - Elevated header hierarchy, tactile tab controls, and added a sticky checkout sidebar (`lg:sticky lg:top-14`) with a live itemized mini-cart summary and EGP subtotal.
+
 ### Added — 2026-11-13 — E-Commerce Storefront CX & Real Laptop Catalog Integration
 - **Curated Laptop Assets & Media Resolver ([src/lib/catalog/laptop-media.ts](file:///d:/Mustadam%20Project/src/lib/catalog/laptop-media.ts), `public/products/laptops/`):**
   - Imported 16 real laptop product photo sets (32 images) from `Products data/Laptops` into `public/products/laptops/<slug>/` and seeded them into Cloud Supabase `serialized_items` (`Listed_In_Store`) with full hardware specs (`CPU`, `RAM`, `Storage`, `GPU`, `Screen`).

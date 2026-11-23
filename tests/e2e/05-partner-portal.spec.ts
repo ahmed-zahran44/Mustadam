@@ -2,11 +2,12 @@ import { test, expect } from "playwright/test";
 
 test.describe("Suite 5: Partner Operations Hub", () => {
   test.beforeEach(async ({ page }) => {
-    // Switch to inspector persona to authenticate as Partner
-    await page.goto("/en");
-    const personaSelect = page.locator('select[data-testid="persona-select"]');
-    await personaSelect.selectOption("inspector");
-    await expect(page).toHaveURL(/\/partner/);
+    // Authenticate through the dedicated Partner Operations subdomain gate
+    await page.goto("http://partner.localhost:3000/en/partner/login");
+    await page.locator("#partner-login-email").fill("inspector@mustadama.eg");
+    await page.locator("#partner-login-password").fill("Mustadama2026!");
+    await page.locator('[data-testid="partner-login-submit"]').click();
+    await expect(page).toHaveURL(/partner\.localhost:3000\/en\/partner$/);
   });
 
   test("PART-01: Logistics tab custody confirmation and custody transitions", async ({ page }) => {

@@ -9,7 +9,7 @@ import { DemoToolbarWrapper } from "@/components/demo/demo-toolbar-wrapper";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { isRtl, routing } from "@/i18n/routing";
-import { isAdminSubdomain } from "@/lib/auth/subdomain";
+import { getPortalDomainKind } from "@/lib/auth/subdomain";
 import "../globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -27,7 +27,7 @@ export async function generateMetadata({
   return { title: t("name"), description: t("tagline") };
 }
 
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("mustadama-theme");var d=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("mustadama-theme");var d=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}try{var clean=function(r){var els=(r&&r.querySelectorAll?r:document).querySelectorAll("[bis_skin_checked],[bis_register]");for(var i=0;i<els.length;i++){els[i].removeAttribute("bis_skin_checked");els[i].removeAttribute("bis_register");}};clean(document);var mo=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var m=ms[i];if(m.type==="attributes"&&(m.attributeName==="bis_skin_checked"||m.attributeName==="bis_register")){m.target.removeAttribute(m.attributeName);}else if(m.type==="childList"){clean(m.target);}}});mo.observe(document.documentElement,{attributes:true,childList:true,subtree:true,attributeFilter:["bis_skin_checked","bis_register"]});window.addEventListener("load",function(){setTimeout(function(){mo.disconnect();},2500);},{once:true});}catch(e){}})();`;
 
 export default async function LocaleLayout({
   children,
@@ -40,7 +40,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const requestHeaders = await headers();
-  const adminHost = isAdminSubdomain(requestHeaders.get("host"));
+  const domainKind = getPortalDomainKind(requestHeaders.get("host"));
 
   return (
     <html
@@ -55,9 +55,9 @@ export default async function LocaleLayout({
         </Script>
         <NextIntlClientProvider>
           <DemoToolbarWrapper />
-          <SiteHeader isAdminSubdomain={adminHost} />
+          <SiteHeader domainKind={domainKind} />
           <main className="flex-1">{children}</main>
-          <SiteFooter isAdminSubdomain={adminHost} />
+          <SiteFooter domainKind={domainKind} />
         </NextIntlClientProvider>
       </body>
     </html>

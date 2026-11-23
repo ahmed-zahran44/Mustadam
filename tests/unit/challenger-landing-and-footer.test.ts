@@ -59,12 +59,11 @@ describe("Adversarial Empirical Verification: Milestone 3 Root Landing Page & Si
     const requiredDestinations = [
       "/store",
       "/seller",
-      "/partner",
       "/login",
       "/register",
     ];
 
-    it("verifies all 6 required destinations exist as next-intl Link components in page.tsx", () => {
+    it("verifies all required customer destinations exist as next-intl Link components in page.tsx", () => {
       // Must import Link from '@/i18n/navigation'
       expect(pageSource).toMatch(/import\s*\{\s*Link\s*\}\s*from\s*["']@\/i18n\/navigation["']/);
 
@@ -171,7 +170,7 @@ describe("Adversarial Empirical Verification: Milestone 3 Root Landing Page & Si
       const footerCalls = Array.from(footerSource.matchAll(/\btFooter\(["']([a-zA-Z0-9_]+)["']\)/g));
       const extractedFooterKeys = Array.from(new Set(footerCalls.map((m) => m[1])));
 
-      expect(extractedFooterKeys.length).toBeGreaterThanOrEqual(8);
+      expect(extractedFooterKeys.length).toBeGreaterThanOrEqual(7);
 
       const enFooter = enMessages.Footer ?? {};
       const arFooter = arMessages.Footer ?? {};
@@ -269,7 +268,7 @@ describe("Adversarial Empirical Verification: Milestone 3 Root Landing Page & Si
 
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
-      expect(html).toContain('href="/partner"');
+      expect(html).not.toContain('href="/partner"');
       expect(html).not.toContain('href="/admin"');
       expect(html).toContain('href="/login"');
       expect(html).toContain('href="/register"');
@@ -290,7 +289,7 @@ describe("Adversarial Empirical Verification: Milestone 3 Root Landing Page & Si
 
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
-      expect(html).toContain('href="/partner"');
+      expect(html).not.toContain('href="/partner"');
       expect(html).not.toContain('href="/admin"');
       expect(html).toContain('href="/login"');
       expect(html).toContain('href="/register"');
@@ -305,7 +304,7 @@ describe("Adversarial Empirical Verification: Milestone 3 Root Landing Page & Si
       const enHtml = renderToStaticMarkup(React.createElement(SiteFooter));
       expect(enHtml).toContain('href="/store"');
       expect(enHtml).toContain('href="/seller"');
-      expect(enHtml).toContain('href="/partner"');
+      expect(enHtml).not.toContain('href="/partner"');
       expect(enHtml).not.toContain('href="/admin"');
       expect(enHtml).toContain('href="/login"');
       expect(enHtml).toContain('href="/register"');
@@ -316,7 +315,7 @@ describe("Adversarial Empirical Verification: Milestone 3 Root Landing Page & Si
       const arHtml = renderToStaticMarkup(React.createElement(SiteFooter));
       expect(arHtml).toContain('href="/store"');
       expect(arHtml).toContain('href="/seller"');
-      expect(arHtml).toContain('href="/partner"');
+      expect(arHtml).not.toContain('href="/partner"');
       expect(arHtml).not.toContain('href="/admin"');
       expect(arHtml).toContain('href="/login"');
       expect(arHtml).toContain('href="/register"');

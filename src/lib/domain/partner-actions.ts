@@ -5,6 +5,7 @@ import { SimulatedNotificationAdapter } from "@/lib/adapters/notification-servic
 import { getActiveSessionProfile } from "@/lib/auth/session";
 import { calculateTargetSellingPrice } from "@/lib/domain/pricing-engine";
 import { calculateOfferExpiryDate } from "@/lib/domain/state-machine";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ConditionGrade, TechnicalClassification } from "@/types/domain";
 
@@ -154,7 +155,7 @@ export async function submitInspectionAndOfferAction(input: {
   )?.seller_id;
 
   if (sellerId) {
-    const notifier = new SimulatedNotificationAdapter(supabase);
+    const notifier = new SimulatedNotificationAdapter(createAdminClient());
     await notifier.send({
       recipientId: sellerId,
       channel: "sms",

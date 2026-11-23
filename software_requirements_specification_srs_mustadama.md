@@ -137,7 +137,7 @@ Mustadama is a centralized cloud-hosted Management Information System (MIS) and 
 
 * **FR-11 (Mandatory Data Wipe Certification) \[Must\]:** For all storage-bearing electronic devices, the system shall enforce a mandatory "Data Wipe Completed" checkbox and log generation (following NIST 800-88 standards) before the item can transition out of inspection. A digital **Data Destruction Certificate** shall be linked to the seller's request.
 
-* **FR-12 (Final Price Offer & Seller Decision Workflow) \[Must\]:** Based on the inspection report, the officer sets the `Final_Purchase_Price`. The system notifies the seller and provides a 48-hour window to **Accept** or **Reject**:
+* **FR-12 (Final Price Offer & Seller Decision Workflow) \[Must\]:** Based on the inspection report, the officer sets the `Final_Purchase_Price`. The system notifies the seller and provides a 7 days window to **Accept** or **Reject**:
 
   * **On Acceptance:** System triggers a digital payout order to the seller and transfers legal ownership of `Item_Serial_ID` to the platform.
 

@@ -38,7 +38,7 @@ async function testRegistration(accountType = "Individual") {
   try {
     await page.waitForURL("**/seller", { timeout: 15000 });
     console.log(`SUCCESS [${accountType}]: Navigated to /seller! URL: ${page.url()}`);
-  } catch (err) {
+  } catch {
     const errorEl = await page.$(".text-rose-700");
     if (errorEl) {
       const errorText = await errorEl.innerText();

@@ -3,7 +3,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GraduationDemoToolbar } from "@/components/demo/graduation-demo-toolbar";
-import { canAccessPortal, DEMO_PERSONAS, PORTAL_ALLOWED_ROLES } from "@/lib/auth/rbac";
+import { canAccessPortal, DEMO_PERSONAS } from "@/lib/auth/rbac";
 
 // Load localization files for oracle comparisons
 const enMessages = JSON.parse(readFileSync("messages/en.json", "utf8"));

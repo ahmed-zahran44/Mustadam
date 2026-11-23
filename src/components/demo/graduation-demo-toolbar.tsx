@@ -12,7 +12,9 @@ import { DEMO_PERSONAS } from "@/lib/auth/rbac";
 import {
   getAdminSubdomainOrigin,
   getCustomerDomainOrigin,
+  getPartnerSubdomainOrigin,
   isAdminSubdomain,
+  isPartnerSubdomain,
 } from "@/lib/auth/subdomain";
 import type { UserRole } from "@/types/domain";
 
@@ -87,19 +89,27 @@ export function GraduationDemoToolbar({
   const handlePersonaSelect = (personaId: string) => {
     if (!personaId) return;
     startTransition(async () => {
+      const targetPersona = DEMO_PERSONAS.find((p) => p.id === personaId);
+      if (!targetPersona) return;
+
+      const currentUrl = new URL(window.location.href);
+      const targetOrigin =
+        targetPersona.defaultRoute === "/admin"
+          ? getAdminSubdomainOrigin(currentUrl)
+          : targetPersona.defaultRoute === "/partner"
+            ? getPartnerSubdomainOrigin(currentUrl)
+            : getCustomerDomainOrigin(currentUrl);
+
+      // Crossing subdomain boundaries: hand off directly to target origin so auth cookies bind to that host
+      if (targetOrigin !== currentUrl.origin) {
+        window.location.assign(
+          `${targetOrigin}/api/auth/demo-switch?persona=${encodeURIComponent(personaId)}&locale=${encodeURIComponent(locale)}`,
+        );
+        return;
+      }
+
       const res = await switchDemoPersonaAction(personaId);
       if (res.ok && res.defaultRoute) {
-        const currentUrl = new URL(window.location.href);
-        if (res.defaultRoute === "/admin") {
-          const adminOrigin = getAdminSubdomainOrigin(currentUrl);
-          window.location.assign(`${adminOrigin}/${locale}/admin`);
-          return;
-        }
-        if (isAdminSubdomain(currentUrl.host)) {
-          const customerOrigin = getCustomerDomainOrigin(currentUrl);
-          window.location.assign(`${customerOrigin}/${locale}${res.defaultRoute}`);
-          return;
-        }
         window.location.assign(`/${locale}${res.defaultRoute}`);
       }
     });
@@ -108,6 +118,15 @@ export function GraduationDemoToolbar({
   const handleSignOut = () => {
     startTransition(async () => {
       await signOutAction();
+      const currentUrl = new URL(window.location.href);
+      if (isAdminSubdomain(currentUrl.host)) {
+        window.location.assign(`/${locale}/admin/login`);
+        return;
+      }
+      if (isPartnerSubdomain(currentUrl.host)) {
+        window.location.assign(`/${locale}/partner/login`);
+        return;
+      }
       window.location.assign(`/${locale}`);
     });
   };

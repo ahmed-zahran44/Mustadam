@@ -3,13 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { SimulatedNotificationAdapter } from "@/lib/adapters/notification-service";
 import {
+  canAccessPortal,
   DEMO_DEFAULT_PASSWORD,
   DEMO_PERSONAS,
   validateCorporateCredentials,
 } from "@/lib/auth/rbac";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AccountType, CustomerSegment } from "@/types/domain";
+import type { AccountType, CustomerSegment, UserRole } from "@/types/domain";
 
 export async function switchDemoPersonaAction(personaId: string) {
   const persona = DEMO_PERSONAS.find((p) => p.id === personaId);
@@ -74,9 +75,32 @@ export async function adminLoginAction(input: {
   }
 
   const role = data.user.app_metadata?.role as string | undefined;
-  if (role !== "Admin") {
+  if (role !== "Admin" && role !== "Customer_Service") {
     await supabase.auth.signOut();
     return { ok: false, error: "ACCESS_DENIED_NON_ADMIN" };
+  }
+
+  return { ok: true };
+}
+
+export async function partnerLoginAction(input: {
+  email: string;
+  password: string;
+}) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: input.email.trim(),
+    password: input.password,
+  });
+
+  if (error || !data.user) {
+    return { ok: false, error: error?.message ?? "Invalid credentials" };
+  }
+
+  const role = data.user.app_metadata?.role as UserRole | undefined;
+  if (!canAccessPortal(role, "partner")) {
+    await supabase.auth.signOut();
+    return { ok: false, error: "ACCESS_DENIED_NON_PARTNER" };
   }
 
   return { ok: true };

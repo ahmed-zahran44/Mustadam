@@ -6,17 +6,21 @@
 
 ## 1. High-Level Architecture
 
-Mustadama runs as a unified **Next.js (App Router, TypeScript)** web application connected to **Cloud Supabase (`https://xijhkffkmlaghqowmrmz.supabase.co`)** via the `supabase-mustadam` MCP server:
+Mustadama runs as a unified **Next.js 16.4.6 (App Router, TypeScript 5, Tailwind CSS 4)** web application connected to **Cloud Supabase (`https://xijhkffkmlaghqowmrmz.supabase.co`)** via the `supabase-mustadam` MCP server:
 
-* **Frontend & UI Layer:** Next.js App Router with bilingual locale routing (`/en/...` LTR, `/ar/...` RTL), Tailwind CSS (logical directional properties), and `shadcn/ui`.
-* **Application & Domain Layer:** Next.js Server Actions and Route Handlers (`/api/webhooks/payment`, `/api/cron/aging`, `/api/documents/[type]/[id]`) invoking strongly typed services and PostgreSQL RPC functions.
+* **Frontend & UI Layer:** Next.js App Router with bilingual locale routing (`/en/...` LTR, `/ar/...` RTL via `next-intl`), Tailwind CSS 4 (logical directional properties + class-based Light/Dark mode), curated local product photography (`public/products/laptops/` & `public/products/furniture/`), and dedicated Operate-mode portals.
+* **Three-Domain Commercial Isolation (`ADR-010`):** Enforced in `src/proxy.ts` and `src/lib/auth/subdomain.ts`:
+  * **Customer Domain (`mustadama.eg` / `localhost:3000`):** Public landing (`/`), Storefront (`/store`), Seller Portal (`/seller`), and Customer Auth (`/login`, `/register`). Blocks `/partner` and `/admin` completely and exposes zero internal operational links in `SiteHeader`, `SiteFooter`, or `HomePage`.
+  * **Partner Subdomain (`partner.mustadama.eg` / `partner.localhost:3000`, overrideable via `NEXT_PUBLIC_PARTNER_HOST`):** Dedicated `/[locale]/partner/login` gate (`partnerLoginAction`) restricted to `Courier`, `Partner_Warehouse_Mgr`, `Partner_Inspector`, `Partner_Refurb_Tech`, `Partner_Dismantle_Tech`, and `Admin`.
+  * **Admin & MIS Subdomain (`admin.mustadama.eg` / `admin.localhost:3000`, overrideable via `NEXT_PUBLIC_ADMIN_HOST`):** Dedicated `/[locale]/admin/login` gate (`adminLoginAction`) restricted to `Admin` and `Customer_Service`.
+* **Application & Domain Layer:** Next.js Server Actions (`src/lib/domain/*-actions.ts`, `src/lib/auth/actions.ts`) and Route Handlers (`/api/webhooks/payment`, `/api/cron/aging`, `/api/auth/demo-switch`, `/api/documents/invoice/[id]`, `/api/documents/certificate/[id]`) invoking strongly typed domain engines and PostgreSQL RPC functions.
 * **Data & Storage Layer (Cloud Supabase — `xijhkffkmlaghqowmrmz`):**
-  * **PostgreSQL:** 23 core relational tables, ACID transactions, row-level locking (`FOR UPDATE`), and immutable state audit triggers.
+  * **PostgreSQL:** 23 core relational tables, ACID transactions, row-level locking (`FOR UPDATE NOWAIT`), and immutable state audit triggers across 6 tracked migrations (`supabase/migrations/20261102000001`–`20261105000006`).
   * **Supabase Auth:** JWT authentication storing the 8 clean RBAC roles in `raw_app_meta_data.role` (never `user_metadata`).
   * **Supabase Storage:** Three buckets:
     * `item-photos` (seller condition photos, inspector photos, storefront listing images)
     * `certificates` (generated NIST 800-88 Data Destruction Certificates — `FR-11`)
-    * `invoices` (generated PDF Tax Invoices — `FR-22`)
+    * `invoices` (generated Tax Invoices — `FR-22`)
   * **Supabase Dashboard & MCP (`supabase-mustadam`):** Visual database inspection, migration management, security/performance advisors, and TypeScript type generation.
 
 ---
@@ -25,62 +29,99 @@ Mustadama runs as a unified **Next.js (App Router, TypeScript)** web application
 
 ```text
 d:/Mustadam Project/
+├── README.md                               # Quick start, 3-domain URLs, demo credentials & script index
 ├── PROJECT.md                              # Domain rules, roles, formulas, state matrix & MoSCoW table
 ├── ARCHITECTURE.md                         # Technical blueprint, 23-table schema, RPCs & adapters (this file)
-├── DECISIONS.md                            # Architectural Decision Records (ADR-001+)
+├── DECISIONS.md                            # Architectural Decision Records (ADR-001 – ADR-010)
 ├── TASKS.md                                # Phased implementation checklist mapped to FR/NFR IDs
 ├── CHANGELOG.md                            # Chronological record of completed work
+├── DEMO_GUIDE.md                           # Acceptance scenarios (TS-01 – TS-12) & 12-persona walkthrough
+├── PLAYWRIGHT_TEST_REPORT.md               # Playwright E2E execution & traceability report
+├── TEST_READY.md                           # Dual-tier Vitest + Playwright verification guide
 ├── AGENTS.md                               # Always-on agent instructions for documentation sync
 ├── .agents/
 │   └── rules/
 │       └── mustadama-docs-sync.md          # Antigravity workspace rule enforcing doc updates
+├── public/
+│   └── products/
+│       ├── laptops/                        # 16 curated laptop photo sets (32 real product images)
+│       └── furniture/                      # 8 curated office & studio furniture photo sets (16 images)
 ├── supabase/
-│   ├── config.toml                         # Local Supabase CLI stack configuration
-│   ├── migrations/                         # Timestamped SQL migrations (23 tables, triggers, RPCs, RLS)
+│   ├── config.toml                         # Supabase CLI configuration
+│   ├── migrations/                         # 6 timestamped SQL migrations (23 tables, triggers, RPCs, RLS)
 │   └── seed.sql                            # Deterministic demo seed data (12 persona accounts, categories, hubs, items)
 ├── messages/
 │   ├── en.json                             # English translations (LTR)
 │   └── ar.json                             # Arabic translations (RTL)
-├── .env.example                            # Local Supabase env template (no secrets)
+├── .env.example                            # Cloud Supabase & optional subdomain host env template (no secrets)
+├── playwright.config.ts                    # Sequential Chromium E2E harness (workers: 1, auto webServer)
 ├── vitest.config.ts                        # Vitest config (`@` alias -> src)
 ├── src/
-│   ├── proxy.ts                            # Next 16 proxy (formerly middleware): next-intl locale routing (ADR-008)
+│   ├── proxy.ts                            # Next 16 proxy (ADR-008, ADR-010): next-intl + 3-domain RBAC/subdomain gates
 │   ├── i18n/                               # next-intl: routing.ts (locales en/ar, isRtl), request.ts, navigation.ts
 │   ├── types/
-│   │   ├── database.types.ts               # Generated by `npx supabase gen types --lang typescript --local`
-│   │   └── domain.ts                       # Domain enums (ItemStatus, DbUserRole, DemoPersona, ConditionGrade, etc.)
+│   │   ├── database.types.ts               # Generated from Cloud Supabase via MCP (`generate_typescript_types`)
+│   │   └── domain.ts                       # Domain enums (ItemLifecycleStatus, UserRole, DemoPersona, ConditionGrade, etc.)
 │   ├── lib/
 │   │   ├── supabase/                       # @supabase/ssr browser, server, and admin (service_role) clients
+│   │   ├── auth/
+│   │   │   ├── actions.ts                  # Login, registration, adminLoginAction, partnerLoginAction, demo switcher
+│   │   │   ├── rbac.ts                     # 8 DB roles, 12 DEMO_PERSONAS, PORTAL_ALLOWED_ROLES, corporate validation
+│   │   │   ├── session.ts                  # Active session & profile loader
+│   │   │   └── subdomain.ts                # 3-domain helpers (customer, partner.*, admin.*)
+│   │   ├── catalog/
+│   │   │   └── laptop-media.ts             # Curated 16 laptops + 8 furniture catalog metadata & photo resolver
+│   │   ├── utils/
+│   │   │   └── image-compression.ts        # Client-side photo compression utility (NFR-03)
 │   │   ├── adapters/
 │   │   │   ├── payment-gateway.ts          # PaymentGatewayAdapter interface & SimulatedPaymentGatewayAdapter
 │   │   │   └── notification-service.ts     # NotificationServiceAdapter interface & SimulatedNotificationAdapter
-│   │   ├── domain/
-│   │   │   ├── pricing-engine.ts           # FR-04 diagnostic range, FR-08 batch logistics split, FR-15 parts cost & FR-17 unit cost
-│   │   │   ├── state-machine.ts            # Section 4 state transition validator & role guard (incl. Decommissioned_Aged)
-│   │   │   ├── aging-engine.ts             # FR-19 30-60-90 day markdown, Day 91+ Decommissioned_Aged & FR-12 7-day Auto-Reject
-│   │   │   └── warranty-engine.ts          # FR-23/FR-24 warranty calculation & eligibility check
-│   │   └── pdf/
-│   │       ├── tax-invoice.ts              # FR-22 PDF tax invoice generator (Individual & B2B Tax ID)
-│   │       └── data-wipe-certificate.ts    # FR-11 NIST 800-88 Data Destruction Certificate generator
+│   │   └── domain/
+│   │       ├── pricing-engine.ts           # FR-04 diagnostic range, FR-08 batch split, FR-15 parts cost & FR-17/ADR-009 35% markup
+│   │       ├── state-machine.ts            # Section 4 state transition validator & role guard (incl. Decommissioned_Aged)
+│   │       ├── aging-engine.ts             # FR-19 30-60-90 day markdown, Day 91+ Decommissioned_Aged & FR-12 7-day Auto-Reject
+│   │       ├── warranty-engine.ts          # FR-23/FR-24 warranty calculation & eligibility check
+│   │       ├── seller-actions.ts           # Seller portal server actions (single, bulk, 7-day offer decision, return fee)
+│   │       ├── partner-actions.ts          # Partner WMS server actions (custody, batch split, intake, inspection, refurb, dismantle)
+│   │       ├── store-actions.ts            # Storefront server actions (reservation lock, checkout, quotes, delivery, claims)
+│   │       └── admin-actions.ts            # Role-guarded Admin & CS actions (categories, quotes, campaigns, claims, returns, bulky gate, aging)
 │   ├── components/
-│   │   ├── ui/                             # shadcn/ui primitives (RTL-ready)
-│   │   ├── layout/                         # Portal headers, sidebars, language switcher (EN/AR)
-│   │   └── demo/
-│   │       └── graduation-demo-toolbar.tsx # 12 persona buttons -> pre-seeded accounts, simulated inbox & cron triggers
+│   │   ├── layout/                         # site-header.tsx, site-footer.tsx, language-switcher.tsx, theme-toggle.tsx
+│   │   ├── landing/                        # hero-folding-laptop.tsx, interactive-showcase.tsx
+│   │   ├── demo/
+│   │   │   ├── demo-toolbar-wrapper.tsx    # Server wrapper loading active session & notifications
+│   │   │   └── graduation-demo-toolbar.tsx # Consolidated 12-persona dropdown, simulated inbox & aging trigger
+│   │   ├── seller/seller-portal-client.tsx # Seller portal UI (Single, Bulk, 7-day Offers)
+│   │   ├── store/storefront-client.tsx     # Storefront UI (Catalog, Filters, Quick-View, Cart/Checkout, Quotes, Orders/Warranty)
+│   │   ├── partner/partner-portal-client.tsx # Partner Operations UI (5 tabs: Logistics, Intake, Inspection, Refurb, Dismantling)
+│   │   └── admin/                          # Modular 6-tab Admin & CS Control Center:
+│   │       ├── admin-types.ts              # Shared Admin & MIS TypeScript interfaces
+│   │       ├── admin-portal-client.tsx     # Role-aware 6-tab workspace shell (CS defaults to Support/Warranty)
+│   │       ├── admin-kpis-tab.tsx          # Financial/Turnaround/Aging/ESG KPIs, charts & aging engine trigger
+│   │       ├── admin-categories-tab.tsx    # Create/Edit categories, visual diagnostic builder & live valuation preview
+│   │       ├── admin-campaigns-tab.tsx     # Customer segmentation directory, inline segment switcher & campaign log
+│   │       ├── admin-quotes-tab.tsx        # Enriched B2B bulk quotes approval & expiration
+│   │       ├── admin-support-tab.tsx       # Customer Service warranty claims triage & seller return authorizations
+│   │       └── admin-operations-tab.tsx    # Bulky pre-verification gate, serialized inventory economics & immutable audit log
 │   └── app/
 │       ├── [locale]/
-│       │   ├── (auth)/                     # Login, Individual & Corporate Customer Registration (FR-01, FR-02)
-│       │   ├── (seller)/seller/            # Portal 1: Single & Bulk requests, handover, 7-day offer decision
+│       │   ├── layout.tsx                  # Locale shell (EN LTR / AR RTL, Inter + Cairo, theme init, domain-aware header/footer)
+│       │   ├── page.tsx                    # Commercial Customer Landing Page (Hero, Featured Laptops/Furniture, B2B, Lifecycle, Impact)
+│       │   ├── (auth)/                     # Customer Login & Individual/Corporate Registration (FR-01)
+│       │   ├── (seller)/seller/            # Portal 1: Single & Bulk acquisition, handover, 7-day offer decision
 │       │   ├── (store)/store/              # Portal 2: Serialized catalog, B2B quotes, checkout, orders, warranty
-│       │   ├── (partner)/partner/          # Portal 3: Logistics, Warehouse Intake, Inspection, Refurb, Dismantle
-│       │   └── (admin)/admin/              # Portal 4: Categories/Pricing, Quotes, Support, Campaigns, MIS KPIs
+│       │   ├── (partner)/partner/          # Portal 3 (`partner.*`): login/ gate + 5-tab WMS & Technical Hub
+│       │   └── (admin)/admin/              # Portal 4 (`admin.*`): login/ gate + 6-tab Admin MIS & Customer Service Center
 │       └── api/
+│           ├── auth/demo-switch/route.ts   # Cross-subdomain Role Simulator cookie handoff
 │           ├── webhooks/payment/route.ts   # Simulated payment gateway webhook receiver (FR-21)
 │           ├── cron/aging/route.ts         # 30-60-90 day aging + 7-day offer Auto-Reject endpoint (FR-12, FR-19)
-│           └── documents/                  # Download endpoints for PDF invoices & data wipe certificates
+│           └── documents/
+│               ├── invoice/[id]/route.ts   # Printable HTML/PDF Tax Invoice (Individual & Corporate Tax ID/CR, FR-22)
+│               └── certificate/[id]/route.ts # Printable NIST SP 800-88 Data Destruction Certificate (FR-11)
 └── tests/
-    ├── unit/                               # Vitest domain tests (pricing, state transitions, aging, warranty)
-    └── integration/                        # Database RPC & concurrency tests
+    ├── unit/                               # 17 Vitest suites (125 tests: domain engines, RBAC, 3-domain isolation, sanitization, RTL responsiveness)
+    └── e2e/                                # 6 Playwright E2E suites (42 scenarios across Customer, Partner & Admin domains)
 ```
 
 ---

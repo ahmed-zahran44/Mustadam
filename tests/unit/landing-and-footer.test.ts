@@ -98,10 +98,11 @@ describe("Milestone 3: Root Landing Page & Site Footer (Requirement R3)", () => 
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
 
-      // 3 Customer/Operations Portal Directory Cards (Admin & MIS is isolated to admin subdomain)
+      // 3 Customer Portal Directory Cards (Partner Operations & Admin MIS are isolated on their own subdomains)
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
-      expect(html).toContain('href="/partner"');
+      expect(html).toContain("Corporate B2B Programs");
+      expect(html).not.toContain('href="/partner"');
       expect(html).not.toContain('href="/admin"');
 
       // Authentication Controls
@@ -141,10 +142,11 @@ describe("Milestone 3: Root Landing Page & Site Footer (Requirement R3)", () => 
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
 
-      // 3 Customer/Operations Portal Directory Cards (Arabic)
+      // 3 Customer Portal Directory Cards (Arabic)
       expect(html).toContain("متجر الأجهزة المعتمدة");
       expect(html).toContain("بوابة البائع والتسعير الذكي");
-      expect(html).toContain("بوابة عمليات الشركاء");
+      expect(html).toContain("برامج الشركات والمؤسسات (B2B)");
+      expect(html).not.toContain('href="/partner"');
       expect(html).not.toContain('href="/admin"');
 
       // Auth Controls (Arabic)
@@ -163,7 +165,7 @@ describe("Milestone 3: Root Landing Page & Site Footer (Requirement R3)", () => 
 
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
-      expect(html).toContain('href="/partner"');
+      expect(html).not.toContain('href="/partner"');
       expect(html).not.toContain('href="/admin"');
       expect(html).toContain('href="/login"');
       expect(html).toContain('href="/register"');
@@ -181,7 +183,7 @@ describe("Milestone 3: Root Landing Page & Site Footer (Requirement R3)", () => 
 
       expect(html).toContain('href="/store"');
       expect(html).toContain('href="/seller"');
-      expect(html).toContain('href="/partner"');
+      expect(html).not.toContain('href="/partner"');
       expect(html).not.toContain('href="/admin"');
       expect(html).toContain('href="/login"');
       expect(html).toContain('href="/register"');

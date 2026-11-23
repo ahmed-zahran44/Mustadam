@@ -1,15 +1,20 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import type { PortalDomainKind } from "@/lib/auth/subdomain";
 
 export function SiteFooter({
+  domainKind,
   isAdminSubdomain = false,
 }: {
+  domainKind?: PortalDomainKind;
   isAdminSubdomain?: boolean;
 }) {
   const tBrand = useTranslations("Brand");
   const tFooter = useTranslations("Footer");
+  const resolvedKind: PortalDomainKind =
+    domainKind ?? (isAdminSubdomain ? "admin" : "customer");
 
-  if (isAdminSubdomain) {
+  if (resolvedKind !== "customer") {
     return (
       <footer className="border-t border-neutral-200 bg-neutral-50 text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-400">
         <div className="mx-auto max-w-6xl px-6 py-6 text-center text-xs text-neutral-500">
@@ -58,37 +63,29 @@ export function SiteFooter({
                   {tFooter("sellerLink")}
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/register"
-                  className="transition hover:text-emerald-700 dark:hover:text-emerald-400"
-                >
-                  {tFooter("registerLink")}
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Operations & Governance Column */}
+          {/* Customer Account Column */}
           <div className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-900 dark:text-neutral-100">
-              {tFooter("operationsHeading")}
+              {tFooter("accountHeading")}
             </h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/partner"
-                  className="transition hover:text-emerald-700 dark:hover:text-emerald-400"
-                >
-                  {tFooter("partnerLink")}
-                </Link>
-              </li>
               <li>
                 <Link
                   href="/login"
                   className="transition hover:text-emerald-700 dark:hover:text-emerald-400"
                 >
                   {tFooter("loginLink")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/register"
+                  className="transition hover:text-emerald-700 dark:hover:text-emerald-400"
+                >
+                  {tFooter("registerLink")}
                 </Link>
               </li>
             </ul>

@@ -79,6 +79,9 @@ export function StorefrontClient({
     "catalog",
   );
   const [gradeFilter, setGradeFilter] = useState<string>("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<
+    "ALL" | "electronics" | "furniture"
+  >("ALL");
   const [brandFilter, setBrandFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<"featured" | "price_asc" | "price_desc">(
@@ -118,6 +121,17 @@ export function StorefrontClient({
   const filteredCatalog = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const list = catalogItems.filter((item) => {
+      if (categoryFilter === "furniture") {
+        const isFurn =
+          item.category_id === "33333333-3333-3333-3333-333333333303" ||
+          (item.categories?.name ?? "").toLowerCase().includes("furniture");
+        if (!isFurn) return false;
+      } else if (categoryFilter === "electronics") {
+        const isFurn =
+          item.category_id === "33333333-3333-3333-3333-333333333303" ||
+          (item.categories?.name ?? "").toLowerCase().includes("furniture");
+        if (isFurn) return false;
+      }
       if (gradeFilter !== "ALL" && item.condition_grade !== gradeFilter) {
         return false;
       }
@@ -153,7 +167,14 @@ export function StorefrontClient({
       );
     }
     return list;
-  }, [catalogItems, gradeFilter, brandFilter, searchQuery, sortBy]);
+  }, [
+    catalogItems,
+    categoryFilter,
+    gradeFilter,
+    brandFilter,
+    searchQuery,
+    sortBy,
+  ]);
 
   const toggleItemSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -268,30 +289,44 @@ export function StorefrontClient({
     });
   };
 
+  const selectedItemsList = useMemo(
+    () => catalogItems.filter((i) => selectedIds.includes(i.item_serial_id)),
+    [catalogItems, selectedIds],
+  );
+  const selectedSubtotalEgp = useMemo(
+    () =>
+      selectedItemsList.reduce(
+        (sum, i) => sum + Number(i.selling_price ?? 0),
+        0,
+      ),
+    [selectedItemsList],
+  );
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-700">
+    <div className="bg-ecommerce-studio min-h-screen">
+      <div className="mx-auto max-w-6xl px-6 py-8 space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-5">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-neutral-950 dark:text-neutral-50">
             {isAr
               ? "متجر الأجهزة والقطع المجددة المعتمدة"
               : "Certified Pre-Owned & Refurbished Store"}
           </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="max-w-[65ch] text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
             {isAr
               ? "كل منتج معروض هو قطعة فريدة مفحوصة وموثقة برقم تسلسلي، مع حجز مؤقت لمدة ١٥ دقيقة أثناء إتمام الدفع."
               : "Every product is an individually verified, serialized unit with a 15-minute checkout reservation hold."}
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("catalog")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
               activeTab === "catalog"
                 ? "bg-emerald-700 text-white"
-                : "bg-neutral-100 dark:bg-neutral-800"
+                : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
             }`}
           >
             {isAr
@@ -301,10 +336,10 @@ export function StorefrontClient({
           <button
             type="button"
             onClick={() => setActiveTab("orders")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
               activeTab === "orders"
                 ? "bg-emerald-700 text-white"
-                : "bg-neutral-100 dark:bg-neutral-800"
+                : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
             }`}
           >
             {isAr
@@ -314,10 +349,10 @@ export function StorefrontClient({
           <button
             type="button"
             onClick={() => setActiveTab("quotes")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
               activeTab === "quotes"
                 ? "bg-emerald-700 text-white"
-                : "bg-neutral-100 dark:bg-neutral-800"
+                : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
             }`}
           >
             {isAr
@@ -353,8 +388,8 @@ export function StorefrontClient({
                     data-testid="store-search"
                     placeholder={
                       isAr
-                        ? "ابحث عن لابتوب، معالج، رام، أو باركود..."
-                        : "Search laptops, CPU, RAM, GPU, or barcode..."
+                        ? "ابحث عن لابتوب، كرسي مكتبي، مكتب، مواصفات، أو باركود..."
+                        : "Search laptops, ergonomic chairs, standing desks, specs, or barcode..."
                     }
                     className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3.5 py-2 text-sm focus:border-emerald-600 focus:outline-none"
                   />
@@ -383,6 +418,46 @@ export function StorefrontClient({
                       : "Price: High to Low"}
                   </option>
                 </select>
+              </div>
+
+              {/* Category Filter Tabs (All, Laptops & Electronics, Office Furniture) */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-neutral-100 pb-2.5 dark:border-neutral-800">
+                <span className="text-xs font-semibold text-neutral-500">
+                  {isAr ? "الفئة:" : "Category:"}
+                </span>
+                {[
+                  {
+                    id: "ALL" as const,
+                    labelEn: "All Products",
+                    labelAr: "كل المنتجات",
+                  },
+                  {
+                    id: "electronics" as const,
+                    labelEn: "Laptops & Electronics",
+                    labelAr: "اللابتوبات والإلكترونيات",
+                  },
+                  {
+                    id: "furniture" as const,
+                    labelEn: "Office & Studio Furniture",
+                    labelAr: "الأثاث المكتبي والمنزلي",
+                  },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter(cat.id);
+                      setBrandFilter("ALL");
+                    }}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                      categoryFilter === cat.id
+                        ? "bg-emerald-700 text-white"
+                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                    }`}
+                  >
+                    {isAr ? cat.labelAr : cat.labelEn}
+                  </button>
+                ))}
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -491,8 +566,21 @@ export function StorefrontClient({
                             src={media.images[0]}
                             alt={isAr ? item.title_ar ?? item.title : item.title}
                             loading="lazy"
-                            className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
+                            className={`animate-product-levitate h-full w-full object-contain p-2 transition duration-500 ${
+                              media.images[1]
+                                ? "group-hover:opacity-0 group-hover:scale-105"
+                                : "group-hover:scale-105"
+                            }`}
                           />
+                          {media.images[1] && (
+                            <img
+                              src={media.images[1]}
+                              alt=""
+                              aria-hidden="true"
+                              loading="lazy"
+                              className="absolute inset-0 h-full w-full object-contain p-2 opacity-0 scale-95 transition duration-500 group-hover:opacity-100 group-hover:scale-105"
+                            />
+                          )}
                           <div className="absolute top-2 start-2 flex flex-wrap gap-1">
                             <span className="inline-block rounded-md bg-emerald-700/90 px-2 py-0.5 text-[11px] font-bold text-white shadow-xs">
                               Grade {item.condition_grade ?? "A"}
@@ -629,14 +717,19 @@ export function StorefrontClient({
           </div>
 
           {/* Checkout & Simulated Payment Gateway Box */}
-          <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 space-y-4 h-fit">
-            <h2 className="text-base font-bold">
-              {isAr
-                ? "إتمام الطلب وبوابة الدفع الإلكتروني"
-                : "Checkout & Electronic Payment"}
-            </h2>
+          <div className="lg:sticky lg:top-14 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 space-y-4 h-fit">
+            <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
+              <h2 className="text-base font-bold text-neutral-950 dark:text-neutral-50">
+                {isAr
+                  ? "إتمام الطلب وبوابة الدفع الإلكتروني"
+                  : "Checkout & Electronic Payment"}
+              </h2>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                {selectedIds.length}
+              </span>
+            </div>
 
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
               {isAr ? (
                 <>
                   القطع المحددة: <strong>{selectedIds.length}</strong> (الدفع إلكتروني آمن؛ الدفع عند الاستلام غير متاح).
@@ -647,6 +740,35 @@ export function StorefrontClient({
                 </>
               )}
             </p>
+
+            {selectedItemsList.length > 0 && (
+              <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/70 p-3 space-y-2 dark:border-neutral-800 dark:bg-neutral-950/60">
+                <ul className="space-y-1.5 text-xs max-h-36 overflow-y-auto">
+                  {selectedItemsList.map((sel) => (
+                    <li
+                      key={sel.item_serial_id}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="truncate font-medium text-neutral-800 dark:text-neutral-200">
+                        {isAr ? sel.title_ar ?? sel.title : sel.title}
+                      </span>
+                      <span
+                        dir="ltr"
+                        className="shrink-0 font-mono font-semibold tabular-nums text-emerald-700 dark:text-emerald-400"
+                      >
+                        {Number(sel.selling_price ?? 0).toLocaleString()} EGP
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-center justify-between border-t border-neutral-200 pt-2 text-xs font-bold dark:border-neutral-800">
+                  <span>{isAr ? "الإجمالي الفرعي" : "Subtotal"}</span>
+                  <span dir="ltr" className="font-mono text-sm tabular-nums text-neutral-950 dark:text-neutral-50">
+                    {selectedSubtotalEgp.toLocaleString()} EGP
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div>
               <label
@@ -1049,6 +1171,7 @@ export function StorefrontClient({
           </div>
         );
       })()}
+      </div>
     </div>
   );
 }

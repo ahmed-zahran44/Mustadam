@@ -34,11 +34,11 @@ test.describe("Suite 1: Root Landing Page & Navigation", () => {
     const portalsHeading = page.getByRole("heading", { name: /Connected Solutions for Every Circular Stakeholder/i });
     await expect(portalsHeading).toBeVisible();
 
-    // Verify presence of customer & operations subsystem links in main (Admin & MIS is isolated on admin subdomain)
+    // Verify only customer-facing links appear on customer website (Partner & Admin are isolated to dedicated subdomains)
     const main = page.locator("main");
     await expect(main.locator('a[href$="/store"]').first()).toBeVisible();
     await expect(main.locator('a[href$="/seller"]').first()).toBeVisible();
-    await expect(main.locator('a[href$="/partner"]').first()).toBeVisible();
+    await expect(main.locator('a[href$="/partner"]')).toHaveCount(0);
     await expect(main.locator('a[href$="/admin"]')).toHaveCount(0);
 
     // Auth links in main gateway
@@ -70,7 +70,9 @@ test.describe("Suite 1: Root Landing Page & Navigation", () => {
 
     // Footer columns (using role heading to avoid strict mode collisions with links)
     await expect(footer.getByRole("heading", { name: /Marketplace & Sourcing/i })).toBeVisible();
-    await expect(footer.getByRole("heading", { name: /Operations & Governance/i })).toBeVisible();
+    await expect(footer.getByRole("heading", { name: /Customer Account/i })).toBeVisible();
+    await expect(footer.locator('a[href$="/partner"]')).toHaveCount(0);
+    await expect(footer.locator('a[href$="/admin"]')).toHaveCount(0);
     await expect(footer.getByRole("heading", { name: /Standards & Compliance/i })).toHaveCount(0);
     await expect(footer.getByText(/Licensed Zero-Landfill Recycling/i)).toHaveCount(0);
 

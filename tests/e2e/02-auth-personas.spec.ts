@@ -34,20 +34,26 @@ test.describe("Suite 2: Role Simulation & Authentication", () => {
     await expect(page.locator("h1")).toContainText(/Store|Certified Pre-Owned/i);
   });
 
-  test("AUTH-03: Persona switching to Partner Operations and automatic redirection", async ({ page }) => {
-    await page.goto("/en");
+  test("AUTH-03: Partner Operations subdomain isolation, gate, and persona redirection", async ({ page }) => {
+    // 1. Visiting /en/partner on customer domain redirects away
+    await page.goto("/en/partner");
+    await expect(page).toHaveURL(/\/en$/);
 
-    const personaSelect = page.locator('select[data-testid="persona-select"]');
+    // 2. Visiting partner.localhost:3000 unauthenticated redirects to /en/partner/login gate
+    await page.goto("http://partner.localhost:3000/en/partner");
+    await expect(page).toHaveURL(/partner\.localhost:3000\/en\/partner\/login/);
 
-    // Switch to Partner Inspector
-    await personaSelect.selectOption("inspector");
-    await expect(page).toHaveURL(/\/partner/);
+    // 3. Sign in with verified Partner Inspector credentials
+    await page.locator("#partner-login-email").fill("inspector@mustadama.eg");
+    await page.locator("#partner-login-password").fill("Mustadama2026!");
+    await page.locator('[data-testid="partner-login-submit"]').click();
+    await expect(page).toHaveURL(/partner\.localhost:3000\/en\/partner$/);
     await expect(page.locator("h1")).toContainText(/Partner Operations|Technical Operations/i);
 
-    // Switch to Courier
+    // 4. Switch to Courier on partner subdomain
     const courierSelect = page.locator('select[data-testid="persona-select"]');
     await courierSelect.selectOption("courier-hub");
-    await expect(page).toHaveURL(/\/partner/);
+    await expect(page).toHaveURL(/partner\.localhost:3000\/en\/partner$/);
   });
 
   test("AUTH-04: Admin & MIS subdomain authentication and authorization gate", async ({ page }) => {

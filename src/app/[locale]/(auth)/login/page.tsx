@@ -60,7 +60,7 @@ export default function LoginPage() {
               dir="ltr"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seller.individual@mustadama.eg"
+              placeholder="you@example.com"
               className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm"
             />
           </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
               dir="ltr"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mustadama2026!"
+              placeholder="••••••••"
               className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm"
             />
           </div>

@@ -288,6 +288,150 @@ export const CURATED_LAPTOPS: CuratedLaptopSpec[] = [
   },
 ];
 
+export const CURATED_FURNITURE: CuratedLaptopSpec[] = [
+  {
+    slug: "herman-miller-aeron-chair",
+    title: "Ergonomic Mesh Office Chair (Pro)",
+    titleAr: "كرسي مكتب طبي شبكي احترافي",
+    brand: "Herman Miller",
+    cpu: "Breathable 8Z Mesh",
+    ram: "68×68×104cm",
+    storage: "Adjustable Lumbar Support",
+    gpu: "Reinforced Frame",
+    screen: "150 kg Load Capacity",
+    priceEgp: 2450,
+    grade: "A",
+    images: [
+      "/products/furniture/herman-miller-aeron-chair/1.jpg",
+      "/products/furniture/herman-miller-aeron-chair/2.jpg",
+    ],
+  },
+  {
+    slug: "steelcase-leap-v2-chair",
+    title: "Executive High-Back Office Chair",
+    titleAr: "كرسي مكتب تنفيذي بظهر مرتفع",
+    brand: "Steelcase",
+    cpu: "Breathable Fabric",
+    ram: "69×63×105cm",
+    storage: "LiveBack + 4D Arms",
+    gpu: "Steel Base",
+    screen: "136 kg Load Capacity",
+    priceEgp: 3200,
+    grade: "A",
+    images: [
+      "/products/furniture/steelcase-leap-v2-chair/1.jpg",
+      "/products/furniture/steelcase-leap-v2-chair/2.jpg",
+    ],
+  },
+  {
+    slug: "autonomous-smartdesk-pro",
+    title: "Motorized Sit-Stand Office Desk (150cm)",
+    titleAr: "مكتب عمل كهربائي متحرك (١٥٠ سم)",
+    brand: "Autonomous",
+    cpu: "Walnut Top + Steel Frame",
+    ram: "150×75×(66–132)cm",
+    storage: "Dual-Motor Electric Lift",
+    gpu: "4-Memory Keypad",
+    screen: "140 kg Lift Capacity",
+    priceEgp: 5800,
+    grade: "A",
+    images: [
+      "/products/furniture/autonomous-smartdesk-pro/1.jpg",
+      "/products/furniture/autonomous-smartdesk-pro/2.jpg",
+    ],
+  },
+  {
+    slug: "ikea-bekant-workstation",
+    title: "IKEA Bekant Oak Office Desk (160cm)",
+    titleAr: "مكتب عمل أيكيا بيكانت خشب بلوط",
+    brand: "IKEA",
+    cpu: "Natural Oak Veneer",
+    ram: "160×80×75cm",
+    storage: "Steel Underframe",
+    gpu: "Integrated Cable Net",
+    screen: "100 kg Load Capacity",
+    priceEgp: 3400,
+    grade: "B",
+    images: [
+      "/products/furniture/ikea-bekant-workstation/1.jpg",
+      "/products/furniture/ikea-bekant-workstation/2.jpg",
+    ],
+  },
+  {
+    slug: "haworth-zody-task-chair",
+    title: "Mesh Task & Study Swivel Chair",
+    titleAr: "كرسي عمل ودراسة دوار شبكي",
+    brand: "Haworth",
+    cpu: "High-Tension Mesh",
+    ram: "74×74×102cm",
+    storage: "Asymmetric Lumbar System",
+    gpu: "Aluminum Base",
+    screen: "135 kg Load Capacity",
+    priceEgp: 1850,
+    grade: "A",
+    images: [
+      "/products/furniture/haworth-zody-task-chair/1.jpg",
+      "/products/furniture/haworth-zody-task-chair/2.jpg",
+    ],
+  },
+  {
+    slug: "west-elm-walnut-desk",
+    title: "Walnut Executive Office Desk (150cm)",
+    titleAr: "مكتب مدير كلاسيكي خشب جوز",
+    brand: "West Elm",
+    cpu: "Kiln-Dried Walnut Wood",
+    ram: "152×66×76cm",
+    storage: "Dual Soft-Close Drawers",
+    gpu: "Brass Hardware",
+    screen: "FSC Certified Timber",
+    priceEgp: 4600,
+    grade: "A",
+    images: [
+      "/products/furniture/west-elm-walnut-desk/1.jpg",
+      "/products/furniture/west-elm-walnut-desk/2.jpg",
+    ],
+  },
+  {
+    slug: "humanscale-freedom-chair",
+    title: "Ergonomic Headrest Manager Chair",
+    titleAr: "كرسي مدير طبي بمسند رأس",
+    brand: "Humanscale",
+    cpu: "Gel Cushion + Textile",
+    ram: "64×64×122cm",
+    storage: "Weight-Sensitive Recline",
+    gpu: "Articulating Headrest",
+    screen: "136 kg Load Capacity",
+    priceEgp: 2950,
+    grade: "A",
+    images: [
+      "/products/furniture/humanscale-freedom-chair/1.jpg",
+      "/products/furniture/humanscale-freedom-chair/2.jpg",
+    ],
+  },
+  {
+    slug: "steelcase-conference-table",
+    title: "6-Seat Office Conference Table (240cm)",
+    titleAr: "طاولة اجتماعات مكتبية لستة أفراد",
+    brand: "Steelcase",
+    cpu: "Acoustic Ash Laminate",
+    ram: "240×110×75cm",
+    storage: "Integrated Power & USB Dock",
+    gpu: "Powder-Coated Steel Legs",
+    screen: "6–8 Person Capacity",
+    priceEgp: 6800,
+    grade: "B",
+    images: [
+      "/products/furniture/steelcase-conference-table/1.jpg",
+      "/products/furniture/steelcase-conference-table/2.jpg",
+    ],
+  },
+];
+
+export const ALL_CURATED_PRODUCTS: CuratedLaptopSpec[] = [
+  ...CURATED_LAPTOPS,
+  ...CURATED_FURNITURE,
+];
+
 export interface ResolvedProductMedia {
   images: string[];
   brand?: string;
@@ -313,11 +457,13 @@ export function resolveProductMedia(
   const normalizedTitle = title.toLowerCase();
 
   const match =
-    (slugHint && CURATED_LAPTOPS.find((l) => l.slug === slugHint)) ||
-    CURATED_LAPTOPS.find((l) =>
+    (slugHint && ALL_CURATED_PRODUCTS.find((l) => l.slug === slugHint)) ||
+    ALL_CURATED_PRODUCTS.find((l) =>
       normalizedTitle.includes(l.title.toLowerCase().split(" ").slice(0, 3).join(" ")),
     ) ||
-    CURATED_LAPTOPS.find((l) => normalizedTitle.includes(l.brand.toLowerCase()));
+    ALL_CURATED_PRODUCTS.find((l) =>
+      normalizedTitle.includes(l.brand.toLowerCase()),
+    );
 
   if (match) {
     return {

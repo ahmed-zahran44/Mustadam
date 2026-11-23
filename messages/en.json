@@ -80,9 +80,16 @@
   "AdminGate": {
     "badge": "Restricted Admin & MIS Subdomain",
     "title": "Admin & MIS Authorization Gate",
-    "subtitle": "Sign in with a verified Platform Administrator account to access MIS telemetry, category schemas, and sustainability controls.",
+    "subtitle": "Sign in with a verified Platform Administrator or Customer Service account to access MIS telemetry, category schemas, warranty queues, and sustainability controls.",
     "submitBtn": "Authenticate to Admin & MIS",
-    "deniedError": "Access denied. This subdomain is restricted to authorized Platform Administrators."
+    "deniedError": "Access denied. This subdomain is restricted to authorized Platform Administrators and Customer Service staff."
+  },
+  "PartnerGate": {
+    "badge": "Restricted Partner Operations Subdomain",
+    "title": "Partner Operations & Technical Hub Gate",
+    "subtitle": "Sign in with an authorized Courier, Warehouse Manager, Technical Inspector, Refurbishment, or Dismantling account to access operational workflows.",
+    "submitBtn": "Authenticate to Partner Hub",
+    "deniedError": "Access denied. This subdomain is restricted to authorized Partner Operations personnel."
   },
   "Landing": {
     "badge": "Egypt's Premier Circular Re-Commerce Platform",
@@ -115,6 +122,10 @@
     "portalPartnerDesc": "Technical operations suite for Couriers, Drop-off Hubs, Technical Inspectors, Refurbishment Technicians, and Dismantling Specialists.",
     "portalPartnerCta": "Enter Technical Hub",
     "portalPartnerBadge": "Operations & Diagnostics",
+    "portalCorporateTitle": "Corporate B2B Programs",
+    "portalCorporateDesc": "Liquidate surplus office hardware and furniture in bulk, request custom B2B volume quotes, and receive tax-compliant invoices with your Tax ID & Commercial Registration.",
+    "portalCorporateCta": "Register Corporate Account",
+    "portalCorporateBadge": "B2B Trade-In & Quotes",
     "portalAdminTitle": "Admin MIS & Sustainability",
     "portalAdminDesc": "Real-time circular governance, ESG metrics tracking landfill diversion, dynamic diagnostic category configuration, and B2B quote approvals.",
     "portalAdminCta": "Open Admin Dashboard",
@@ -173,7 +184,10 @@
     "featuredSubtitle": "Inspected across 25+ hardware checkpoints, data-wiped to NIST SP 800-88 standards, and backed by a 90-day serialized warranty.",
     "featuredViewAll": "View Full Storefront",
     "featuredGradePrefix": "Grade",
-    "featuredShopItem": "Shop Now"
+    "featuredShopItem": "Shop Now",
+    "furnitureBadge": "Circular Workspace & Home Furniture",
+    "furnitureTitle": "Certified Refurbished Office & Studio Furniture",
+    "furnitureSubtitle": "Ergonomic chairs, motorized standing desks, and solid walnut workstations professionally restored, sanitized, and warrantied."
   },
   "Footer": {
     "tagline": "Egypt's premier circular re-commerce platform for serialized electronics and furniture.",
@@ -182,6 +196,7 @@
     "sellerLink": "Seller Sourcing Portal",
     "registerLink": "Register Customer Account",
     "operationsHeading": "Operations & Governance",
+    "accountHeading": "Customer Account",
     "partnerLink": "Partner Operations Hub",
     "adminLink": "Admin MIS & Sustainability",
     "loginLink": "Portal Sign In",

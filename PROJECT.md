@@ -15,70 +15,78 @@
 
 ---
 
-## 2. Four Primary Subsystems (Portals)
+## 2. Four Primary Subsystems Across Three Commercial Domains (`ADR-010`)
 
-1. **Seller Portal (`/seller` — Acquisition Engine):**
+Mustadama isolates customer, partner, and admin portals onto dedicated commercial domains while preserving unified backend data integrity:
+
+1. **Seller Portal (`/[locale]/seller` on Customer Domain — Acquisition Engine):**
    * Accessible to any authenticated `Customer` (`Individual` or `Company`).
    * Individual single-item sale submissions with photo upload (min 3, max 5 with client-side compression) and dynamic category diagnostic questionnaires (`FR-03`, `NFR-03`, `NFR-05`).
    * Automated non-binding estimated price range (`Min EGP – Max EGP`) with legal disclaimer (`FR-04`).
-   * Corporate (B2B) bulk liquidation requests via multi-line entry or structured manifest upload (`FR-05`).
+   * Corporate (B2B) bulk liquidation requests via multi-line entry / CSV manifest import in the Bulk Liquidation tab (`FR-05`, gated to `account_type = 'Company'`).
    * Handover selection: Door-to-door courier pickup, Authorized Partner Drop-off QR/Tracking code, or Bulky Furniture pre-verified batch routing (`FR-06`, `FR-08`).
    * **7-Day (168-Hour) Final Price Offer decision workflow (`FR-12`):**
      * **Accept:** Triggers simulated digital payout and transfers legal ownership to Mustadama.
      * **Reject:** Calculates Return Transport & Inspection Fee, generates a `Return_Tasks` record, transitions item to `Return_In_Progress`, and locks release until fee settlement.
      * **No Response within 7 Days (168 Hours) — Auto-Reject:** Automatically marks the offer as rejected (`Auto-Reject`), transitions the item to `Return_In_Progress`, and generates the return workflow task.
-2. **Buyer E-Commerce Storefront (`/store`):**
-   * Accessible to any `Customer` (`Individual` or `Company`).
+2. **Buyer E-Commerce Storefront (`/[locale]/store` & `/[locale]` on Customer Domain):**
+   * Accessible to public visitors and authenticated `Customer` (`Individual` or `Company`) accounts, with curated real-photo laptop and office/studio furniture inventory, live search, category/brand/grade filters, price sorting, quick-view gallery modal, and Light/Dark theme support.
    * Serialized catalog displaying only `Listed_In_Store` items with real photos, technical specs, Condition Grade (`Grade A`, `Grade B`, `Grade C`), current selling price (reflecting 30–60–90 day aging), and category warranty duration (`FR-18`).
    * Corporate (B2B) Bulk Quote Request workflow with custom admin discount and 7-day validity (`FR-20`).
    * Digital checkout with 15-minute inventory reservation lock (`NFR-04`) and Simulated Multi-Channel Payment Gateway (Bank Cards, Mobile Wallets, InstaPay) (`FR-21`, `NFR-01`).
-   * Automated PDF Tax Invoice generation (including Corporate Tax ID & Commercial Registration) (`FR-22`).
+   * Automated printable HTML/PDF Tax Invoice generation (including Corporate Tax ID & Commercial Registration) (`FR-22`).
    * Order tracking, delivery confirmation, automated warranty end-date calculation (`FR-23`), and warranty claim submission (`FR-24`).
-3. **Partner Operations Portal (`/partner` — WMS & Technical Hub):**
-   * **Logistics View (`Courier`):** Courier doorstep pickup confirmation, Partner Drop-off Hub QR/tracking scan (`FR-07`), and Bulky Transport Team batch pickup manifest execution (`FR-08`).
-   * **Warehouse Manager View (`Partner_Warehouse_Mgr`):** Serialized warehouse intake generating unique `item_serial_id` & barcode (`FR-09`), return shipment release after fee payment (`FR-12`), and licensed recycler scrap batch handover logging (`FR-16`).
-   * **Inspection Officer View (`Partner_Inspector`):** Technical inspection report (`Ready_For_Sale`, `Repairable`, `Irreparable`), mandatory NIST 800-88 Data Wipe verification & certificate generation for storage-bearing electronics (`FR-11`), and `final_purchase_price` submission setting `offer_expires_at = inspected_at + 7 days` (`FR-10`, `FR-12`).
-   * **Refurbishment Technician View (`Partner_Refurb_Tech`):** Work order management, spare part consumption from `Spare_Parts_Inventory` (automatically adding the harvested part's `estimated_cost` to `parts_cost` and `Refurbishment_Cost` per `FR-15`), labor cost logging, final grade assignment (`Grade A/B/C`), and ticket closure (`FR-13`).
-   * **Dismantling Technician View (`Partner_Dismantle_Tech`):** Dismantling of `Pending_Dismantling` (irreparable) and `Decommissioned_Aged` (aged > 90 days) items, functional spare parts harvesting with `estimated_cost` valuation linked to parent `item_serial_id` (`FR-14`), and remaining scrap weight logging by material category (`E-waste`, `Metal`, `Wood`, `Plastic`) (`FR-16`).
-4. **Core Admin & MIS Analytics Dashboard (`/admin`):**
-   * **Customer Service View (`Customer_Service`):** Buyer/seller inquiry handling, `Warranty_Claims` triage, and return authorizations (`FR-24`).
-   * **Platform Manager View (`Admin`):** Category & dynamic JSON diagnostic questionnaire configuration, base pricing & deduction rules, warranty policy configuration, bulky pre-verification approval (`FR-04`, `FR-08`, `FR-23`, `NFR-05`), Corporate B2B Bulk Quote discount approval (`FR-20`), customer segmentation campaigns (`FR-25`), and real-time MIS & Sustainability KPIs (`FR-26`).
+3. **Partner Operations Portal (`partner.*` Subdomain: `/[locale]/partner/login` & `/[locale]/partner` — WMS & Technical Hub):**
+   * Isolated from the customer website behind a dedicated Partner Authorization Gate (`partnerLoginAction`) with 5 operational tabs:
+   * **Tab 1 — Logistics & Shipped Batches (`Courier`):** Courier doorstep pickup confirmation, Partner Drop-off Hub QR/tracking scan (`FR-07`), and Bulky Transport Team batch pickup manifest execution with equal cost split (`FR-08`).
+   * **Tab 2 — Warehouse Intake (`Partner_Warehouse_Mgr`):** Serialized warehouse intake generating unique `item_serial_id` & barcode `MST-YYYY-NNNNN` (`FR-09`).
+   * **Tab 3 — Technical Inspection & Data Sanitization (`Partner_Inspector`):** Technical inspection report (`Ready_For_Sale`, `Repairable`, `Irreparable`), mandatory NIST 800-88 Data Wipe verification & certificate generation for storage-bearing electronics (`FR-11`), and `final_purchase_price` submission setting `offer_expires_at = inspected_at + 7 days` (`FR-10`, `FR-12`).
+   * **Tab 4 — Refurbishment & Parts (`Partner_Refurb_Tech`):** Work order management, spare part consumption from `Spare_Parts_Inventory` (automatically adding the harvested part's `estimated_cost` to `parts_cost` and `Refurbishment_Cost` per `FR-15`), labor cost logging, final grade assignment (`Grade A/B/C`), and ticket closure (`FR-13`).
+   * **Tab 5 — Dismantling & Scrap Recycling (`Partner_Dismantle_Tech` & `Partner_Warehouse_Mgr`):** Dismantling of `Pending_Dismantling` (irreparable) and `Decommissioned_Aged` (aged > 90 days) items, functional spare parts harvesting with `estimated_cost` valuation linked to parent `item_serial_id` (`FR-14`), remaining scrap weight logging by material category (`E-waste`, `Metal`, `Wood`, `Plastic`), and licensed recycler scrap batch handover logging (`FR-16`).
+4. **Core Admin & MIS Analytics Dashboard (`admin.*` Subdomain: `/[locale]/admin/login` & `/[locale]/admin`):**
+   * Isolated from the customer website behind a dedicated Admin & MIS Authorization Gate (`adminLoginAction`) with 6 modular tabs:
+   * **Tab 1 — Platform KPIs & Sustainability (`Admin`):** Real-time financial revenue, realized/listed unit margins, seller offer acceptance funnel, average receipt-to-sale turnaround time, 30–60–90+ aging breakdown with one-click aging engine trigger, item lifecycle distribution chart, and material-level landfill diversion & CO₂e impact (`FR-26`).
+   * **Tab 2 — Categories & Diagnostic Schemas (`Admin`):** Create & edit categories, visual interactive diagnostic question builder synced with JSON schema, live valuation preview, and warranty/wipe/bulky policy configuration (`FR-04`, `FR-23`, `NFR-05`).
+   * **Tab 3 — Customer Segments & Campaigns (`Admin`):** Live `Individual` / `Startup` / `Enterprise` counts, searchable customer directory with inline segment updates, promo campaign composer (Email/SMS + optional promo code), and recent dispatch log (`FR-25`).
+   * **Tab 4 — Corporate B2B Quotes (`Admin`):** Status-filtered bulk quotes with buyer company/Tax ID, itemized serialized units, discounted total preview, Approve (7-day validity), and Expire actions (`FR-20`).
+   * **Tab 5 — Warranty Claims & Support (`Customer_Service` default tab & `Admin`):** Triage (`In Review`, `Approve & Resolve Claim`, `Reject`) with warranty coverage badges and buyer notifications (`FR-24`), plus the **Seller Return Authorizations (`return_tasks`)** queue (`FR-12`).
+   * **Tab 6 — Operations & Audit Trail (`Admin`):** Bulky Furniture Pre-Verification approval gate (`FR-08`), searchable Serialized Inventory & Unit Economics table (`FR-17`), and searchable Immutable Lifecycle Audit Log (`item_status_history`, `NFR-02`).
 
 ---
 
-## 3. RBAC Database Roles vs. Graduation Demo Toolbar Personas (`FR-01`, `FR-02`)
+## 3. RBAC Database Roles vs. Role Simulator Personas (`FR-01`, `FR-02`)
 
 ### 3.1 Clean Database RBAC Roles (`Users.role` & Auth JWT `app_metadata.role`)
 Buyers and sellers are consolidated into a single unified **`Customer`** role paired with `Users.account_type` (`Individual` | `Company`). Any `Customer` can both buy on `/store` and sell on `/seller` using the same account.
 
-| # | Database `Users.role` | Allowed `account_type` | Portal Access | Capabilities |
+| # | Database `Users.role` | Allowed `account_type` | Domain & Portal Access | Capabilities |
 |---|---|---|---|---|
-| 1 | `Customer` | `Individual` or `Company` | `/seller` & `/store` | Buy and sell items; `Company` accounts unlock B2B bulk liquidation (`FR-05`), B2B bulk quotes (`FR-20`), and tax-compliant invoices (`FR-22`). |
-| 2 | `Courier` | `Individual` | `/partner/logistics` | Doorstep small-device custody confirmation (`FR-07`), Partner Drop-off Hub QR scan (`FR-07`), and Bulky Batch Pickup manifest execution (`FR-08`). |
-| 3 | `Partner_Warehouse_Mgr` | `Individual` | `/partner/warehouse` | Serialized warehouse intake & barcode generation (`FR-09`), return shipment release (`FR-12`), and `Recycling_Batches` handover logging (`FR-16`). |
-| 4 | `Partner_Inspector` | `Individual` | `/partner/inspection` | Bulky pre-verification (`FR-08`), technical inspection (`FR-10`), NIST 800-88 data wipe certification (`FR-11`), and setting `final_purchase_price` (`FR-12`). |
-| 5 | `Partner_Refurb_Tech` | `Individual` | `/partner/refurbishment` | Refurbishment work orders (`FR-13`), consuming harvested parts from `Spare_Parts_Inventory` (`FR-15`), logging labor/parts cost, and assigning `Grade A/B/C`. |
-| 6 | `Partner_Dismantle_Tech` | `Individual` | `/partner/dismantling` | Dismantling `Pending_Dismantling` & `Decommissioned_Aged` items, harvesting parts with `estimated_cost` (`FR-14`), and logging `Scrap_Entries` (`FR-16`). |
-| 7 | `Customer_Service` | `Individual` | `/admin/support` | Managing buyer/seller inquiries, `Warranty_Claims` (`FR-24`), and return authorizations. |
-| 8 | `Admin` | `Individual` | `/admin` | Full platform configuration, pricing/aging rules, B2B quote discounts (`FR-20`), segmentation campaigns (`FR-25`), and MIS KPIs (`FR-26`). |
+| 1 | `Customer` | `Individual` or `Company` | Customer domain: `/seller` & `/store` | Buy and sell items; `Company` accounts unlock B2B bulk liquidation (`FR-05`), B2B bulk quotes (`FR-20`), and tax-compliant invoices (`FR-22`). |
+| 2 | `Courier` | `Individual` | `partner.*`: `/partner` (Logistics tab) | Doorstep small-device custody confirmation (`FR-07`), Partner Drop-off Hub QR scan (`FR-07`), and Bulky Batch Pickup manifest execution (`FR-08`). |
+| 3 | `Partner_Warehouse_Mgr` | `Individual` | `partner.*`: `/partner` (Intake & Recycling tabs) | Serialized warehouse intake & barcode generation (`FR-09`), return shipment release (`FR-12`), and `Recycling_Batches` handover logging (`FR-16`). |
+| 4 | `Partner_Inspector` | `Individual` | `partner.*`: `/partner` (Inspection tab) | Technical inspection (`FR-10`), NIST 800-88 data wipe certification (`FR-11`), and setting `final_purchase_price` (`FR-12`). |
+| 5 | `Partner_Refurb_Tech` | `Individual` | `partner.*`: `/partner` (Refurbishment tab) | Refurbishment work orders (`FR-13`), consuming harvested parts from `Spare_Parts_Inventory` (`FR-15`), logging labor/parts cost, and assigning `Grade A/B/C`. |
+| 6 | `Partner_Dismantle_Tech` | `Individual` | `partner.*`: `/partner` (Dismantling tab) | Dismantling `Pending_Dismantling` & `Decommissioned_Aged` items, harvesting parts with `estimated_cost` (`FR-14`), and logging `Scrap_Entries` (`FR-16`). |
+| 7 | `Customer_Service` | `Individual` | `admin.*`: `/admin` (defaults to Warranty Claims & Return Authorizations tab) | Managing buyer/seller support, `Warranty_Claims` (`FR-24`), and `return_tasks` authorizations (`FR-12`). |
+| 8 | `Admin` | `Individual` | `admin.*`: `/admin` (all 6 tabs; can also access `/partner`, `/seller`, `/store`) | Full platform configuration, dynamic categories, bulky pre-verification (`FR-08`), B2B quote approvals (`FR-20`), customer segmentation campaigns (`FR-25`), and real-time MIS & ESG KPIs (`FR-26`). |
 
-### 3.2 Graduation Demo Toolbar Personas (12 UI Buttons — SRS Table 2.2)
-The **Graduation Demo Toolbar** displays all **12 SRS User Personas** as one-click buttons. Clicking any button switches the active session to a dedicated pre-seeded user account and navigates directly to that persona's workspace:
+### 3.2 Consolidated Role Simulator Dropdown Personas (12 UI Options — SRS Table 2.2)
+The **Role Simulator Toolbar** (`<select data-testid="persona-select">`) groups all **12 SRS User Personas** under *Customers*, *Partner Operations*, and *Platform Administration*. Selecting any persona signs in as the corresponding pre-seeded account (binding cookies on the target subdomain via `/api/auth/demo-switch` when crossing origins) and navigates directly to its portal:
 
-| Demo Button # | SRS Persona Label | Pre-Seeded Account `Users.role` | `account_type` | Target Route |
+| Demo # | SRS Persona Label | Pre-Seeded Account `Users.role` | `account_type` | Target Domain & Route |
 |---|---|---|---|---|
-| 1 | **Individual Seller** | `Customer` | `Individual` | `/[locale]/seller` |
-| 2 | **Corporate Seller (B2B)** | `Customer` | `Company` | `/[locale]/seller/bulk` |
-| 3 | **Individual Buyer** | `Customer` | `Individual` | `/[locale]/store` |
-| 4 | **Corporate Buyer (B2B)** | `Customer` | `Company` | `/[locale]/store/quotes` |
-| 5 | **Courier / Partner Drop-off Agent** | `Courier` | `Individual` | `/[locale]/partner/logistics` |
-| 6 | **Transport Team (Bulky)** | `Courier` | `Individual` | `/[locale]/partner/logistics/manifests` |
-| 7 | **Partner Inspection Officer** | `Partner_Inspector` | `Individual` | `/[locale]/partner/inspection` |
-| 8 | **Partner Refurbishment Tech** | `Partner_Refurb_Tech` | `Individual` | `/[locale]/partner/refurbishment` |
-| 9 | **Partner Dismantling Tech** | `Partner_Dismantle_Tech` | `Individual` | `/[locale]/partner/dismantling` |
-| 10 | **Partner Warehouse Manager** | `Partner_Warehouse_Mgr` | `Individual` | `/[locale]/partner/warehouse` |
-| 11 | **Customer Service Agent** | `Customer_Service` | `Individual` | `/[locale]/admin/support` |
-| 12 | **Platform Manager (Admin)** | `Admin` | `Individual` | `/[locale]/admin` |
+| 1 | **Individual Seller** | `Customer` | `Individual` | `localhost:3000/[locale]/seller` |
+| 2 | **Corporate Seller (B2B)** | `Customer` | `Company` | `localhost:3000/[locale]/seller` |
+| 3 | **Individual Buyer** | `Customer` | `Individual` | `localhost:3000/[locale]/store` |
+| 4 | **Corporate Buyer (B2B)** | `Customer` | `Company` | `localhost:3000/[locale]/store` |
+| 5 | **Courier / Drop-off Hub** | `Courier` | `Individual` | `partner.localhost:3000/[locale]/partner` |
+| 6 | **Bulky Transport Team** | `Courier` | `Individual` | `partner.localhost:3000/[locale]/partner` |
+| 7 | **Partner Inspector** | `Partner_Inspector` | `Individual` | `partner.localhost:3000/[locale]/partner` |
+| 8 | **Refurbishment Tech** | `Partner_Refurb_Tech` | `Individual` | `partner.localhost:3000/[locale]/partner` |
+| 9 | **Dismantling Tech** | `Partner_Dismantle_Tech` | `Individual` | `partner.localhost:3000/[locale]/partner` |
+| 10 | **Warehouse Manager** | `Partner_Warehouse_Mgr` | `Individual` | `partner.localhost:3000/[locale]/partner` |
+| 11 | **Customer Service** | `Customer_Service` | `Individual` | `admin.localhost:3000/[locale]/admin` |
+| 12 | **Platform Admin (MIS)** | `Admin` | `Individual` | `admin.localhost:3000/[locale]/admin` |
 
 ---
 

@@ -131,3 +131,18 @@
      * **Tier 3 (`61_90`, Days 61–90):** $\text{Selling\_Price} = \text{Total\_Unit\_Cost}$ (`0%` margin break-even clearance).
      * **Tier 4 (`91_plus`, Days 91+):** Transition `Listed_In_Store` $\rightarrow$ `Decommissioned_Aged` and open an `aged_out` dismantling ticket.
 * **Consequences:** Eliminates ad-hoc or inconsistent markup multipliers across seller/partner flows and guarantees profitable unit economics across both Tier 1 and Tier 2 aging windows.
+
+---
+
+## ADR-010: Three-Domain Commercial Portal Isolation (Customer / Partner / Admin)
+
+* **Date:** 2026-11-21
+* **Status:** Accepted
+* **Context:** In a real commercial re-commerce platform, public buyers and sellers should never see internal operational links (`Partner Operations` or `Admin & MIS`) in the storefront navbar, landing page, or footer, nor be able to hit internal routes on the customer domain.
+* **Decision:**
+  1. Isolate internal portals onto dedicated subdomains enforced in `src/proxy.ts` and `src/lib/auth/subdomain.ts`:
+     * **Customer Domain (`mustadama.eg` / `localhost:3000`):** Serves Landing (`/`), Storefront (`/store`), Seller Portal (`/seller`), and Customer Auth (`/login`, `/register`). Blocks `/partner` and `/admin` completely and contains zero navigation links to them.
+     * **Partner Operations Subdomain (`partner.mustadama.eg` / `partner.localhost:3000`):** Dedicated `/[locale]/partner/login` authorization gate (`partnerLoginAction`) restricted to `Courier`, `Partner_Warehouse_Mgr`, `Partner_Inspector`, `Partner_Refurb_Tech`, `Partner_Dismantle_Tech`, and `Admin`.
+     * **Admin & MIS Subdomain (`admin.mustadama.eg` / `admin.localhost:3000`):** Dedicated `/[locale]/admin/login` authorization gate (`adminLoginAction`) restricted to `Admin` and `Customer_Service`.
+  2. Support seamless cross-subdomain Role Simulator switching via `/api/auth/demo-switch` so pre-seeded demo personas bind Supabase session cookies cleanly on the target origin.
+* **Consequences:** Authentic commercial storefront UX for buyers/sellers, strict operational surface separation, and uninterrupted 12-persona demonstration flow.

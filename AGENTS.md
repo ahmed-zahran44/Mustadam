@@ -7,15 +7,16 @@
 Before creating or modifying any code, database migration, or UI component, you **MUST** inspect the relevant sections of:
 1. **[PROJECT.md](file:///d:/Mustadam%20Project/PROJECT.md):** For the 8 DB RBAC roles vs. 12 Demo Toolbar personas, MoSCoW requirements (`FR-01`–`FR-26`, `NFR-01`–`NFR-05`), exact business formulas (`FR-04` pricing, `FR-08`/`FR-17` equal batch logistics split, `FR-14`/`FR-15` harvested `estimated_cost` rollup, `FR-12` 7-day / 168h offer Auto-Reject, `FR-19` 30–60–90 aging with `Decommissioned_Aged`, `FR-23` warranty), and the strict item lifecycle transition matrix.
 2. **[ARCHITECTURE.md](file:///d:/Mustadam%20Project/ARCHITECTURE.md):** For directory layout, exact 23-table PostgreSQL schema & column names, database triggers/RPCs, Supabase RLS rules, and adapter interfaces.
-3. **[DECISIONS.md](file:///d:/Mustadam%20Project/DECISIONS.md):** To respect settled Architecture Decision Records (`ADR-001`–`ADR-007`).
+3. **[DECISIONS.md](file:///d:/Mustadam%20Project/DECISIONS.md):** To respect settled Architecture Decision Records (`ADR-001`–`ADR-010`).
 4. **[TASKS.md](file:///d:/Mustadam%20Project/TASKS.md):** To identify the current active task and its acceptance criteria.
 
 ## 2. Zero-Hallucination Guardrails
 
 * **Never invent table or column names:** Only use the 23 tables and columns defined in `ARCHITECTURE.md` (derived from SRS Section 5 + approved refinements: `pickup_manifests.total_batch_logistics_cost` and `spare_parts_inventory.estimated_cost`). If a new column or helper table is genuinely needed, document it in `ARCHITECTURE.md` and log the rationale in `DECISIONS.md` first.
-* **Decouple DB RBAC Roles from Demo Toolbar Personas (`FR-01`, `FR-02`, `ADR-006`):**
+* **Decouple DB RBAC Roles from Role Simulator Personas (`FR-01`, `FR-02`, `ADR-006`, `ADR-010`):**
   * In `users.role` and Auth JWT `app_metadata.role`, use ONLY the 8 clean roles: `'Customer'` (paired with `account_type = 'Individual' | 'Company'`), `'Partner_Inspector'`, `'Partner_Refurb_Tech'`, `'Partner_Dismantle_Tech'`, `'Partner_Warehouse_Mgr'`, `'Courier'`, `'Customer_Service'`, and `'Admin'`. Any `Customer` can both buy and sell.
-  * In the Graduation Demo Toolbar UI, display all **12 SRS persona buttons**, switching the active session to the corresponding pre-seeded user account and routing to its view.
+  * In the Role Simulator Toolbar UI (`<select data-testid="persona-select">`), expose all **12 SRS personas**, switching sessions across the 3 isolated commercial domains (`localhost:3000`, `partner.localhost:3000`, `admin.localhost:3000`) via `/api/auth/demo-switch`.
+  * **Three-Domain Commercial Isolation (`ADR-010`):** Never expose `/partner` or `/admin` links on the customer navbar, footer, or landing page. Partner Operations lives strictly on `partner.*` (`/partner/login`) and Admin & MIS lives strictly on `admin.*` (`/admin/login`).
 * **Never bypass the item lifecycle state machine (`NFR-02`, `FR-12`, `FR-19`):**
   * All changes to `serialized_items.current_status` must obey the transition table in `PROJECT.md Section 5` and record an immutable entry in `item_status_history`.
   * Unsold items after 90 days must transition `Listed_In_Store` $\rightarrow$ **`Decommissioned_Aged`**, and then **`Decommissioned_Aged`** $\rightarrow$ `Scrap_Ready_For_Recycling` once dismantled.

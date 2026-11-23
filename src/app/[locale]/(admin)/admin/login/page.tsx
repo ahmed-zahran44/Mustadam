@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import { adminLoginAction } from "@/lib/auth/actions";
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const t = useTranslations("AdminGate");
   const tAuth = useTranslations("Auth");
   const locale = useLocale();
@@ -35,7 +35,9 @@ export default function AdminLoginPage() {
       }
 
       const target =
-        nextPath && nextPath.startsWith(`/${locale}/admin`) && !nextPath.includes("/admin/login")
+        nextPath &&
+        nextPath.startsWith(`/${locale}/admin`) &&
+        !nextPath.includes("/admin/login")
           ? nextPath
           : `/${locale}/admin`;
       window.location.assign(target);
@@ -44,16 +46,16 @@ export default function AdminLoginPage() {
 
   return (
     <div className="mx-auto max-w-md px-6 py-16">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-7 shadow-sm space-y-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-2xl border border-neutral-200 bg-white p-7 space-y-6 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="space-y-2 text-start">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/20 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/50 dark:text-emerald-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-            {t("badge")}
-          </span>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          <div className="flex items-center gap-2 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            <span className="h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+            <span>{t("badge")}</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-[-0.02em] text-neutral-900 dark:text-neutral-100">
             {t("title")}
           </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
             {t("subtitle")}
           </p>
         </div>
@@ -71,7 +73,7 @@ export default function AdminLoginPage() {
           <div>
             <label
               htmlFor="admin-login-email"
-              className="mb-1 block text-sm font-medium text-start"
+              className="mb-1.5 block text-sm font-medium text-neutral-800 dark:text-neutral-200 text-start"
             >
               {tAuth("emailLabel")}
             </label>
@@ -79,18 +81,19 @@ export default function AdminLoginPage() {
               id="admin-login-email"
               type="email"
               required
+              autoComplete="username"
               dir="ltr"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@mustadama.eg"
-              className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+              className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 dark:border-neutral-700 focus:border-emerald-600 focus:outline-none"
             />
           </div>
 
           <div>
             <label
               htmlFor="admin-login-password"
-              className="mb-1 block text-sm font-medium text-start"
+              className="mb-1.5 block text-sm font-medium text-neutral-800 dark:text-neutral-200 text-start"
             >
               {tAuth("passwordLabel")}
             </label>
@@ -98,11 +101,12 @@ export default function AdminLoginPage() {
               id="admin-login-password"
               type="password"
               required
+              autoComplete="current-password"
               dir="ltr"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+              className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 dark:border-neutral-700 focus:border-emerald-600 focus:outline-none"
             />
           </div>
 
@@ -110,7 +114,7 @@ export default function AdminLoginPage() {
             type="submit"
             disabled={isPending}
             data-testid="admin-login-submit"
-            className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50 cursor-pointer"
           >
             {isPending ? tAuth("submitting") : t("submitBtn")}
           </button>
@@ -120,3 +124,16 @@ export default function AdminLoginPage() {
   );
 }
 
+export default function AdminLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-md px-6 py-16">
+          <div className="h-80 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 animate-pulse" />
+        </div>
+      }
+    >
+      <AdminLoginForm />
+    </Suspense>
+  );
+}

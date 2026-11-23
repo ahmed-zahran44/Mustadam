@@ -14,7 +14,14 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "playwright-report/**",
     "test-results/**",
+    ".agents/**",
   ]),
+  {
+    rules: {
+      "@next/next/no-img-element": "off",
+      "@next/next/no-location-assign-relative-destination": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
